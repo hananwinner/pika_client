@@ -1,0 +1,18 @@
+consumers:
+  default:
+    connection:
+      host: localhost
+      port: 5672
+      virtual_host: /
+    route:
+      exchange: ""
+      queue: q
+publishers:
+  default:
+    connection:
+      host: localhost
+      port: 5672
+      virtual_host: /
+    route:
+      exchange: ""
+      routing_key: q
