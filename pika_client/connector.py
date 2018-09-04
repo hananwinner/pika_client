@@ -64,9 +64,21 @@ class _AsyncConnector(threading.Thread):
 class AsyncConsumer(_AsyncConnector):
     def __init__(self, connection_parameters, setup_config, on_message, **kwargs):
         self._queue = setup_config.get("queue")
-        self._on_message = on_message
+        self._on_message = self._on_message_ack_decorator(on_message)
         super(AsyncConsumer, self).__init__(connection_parameters, setup_config, self._start_consume, **kwargs)
         self._consumer_tag = None
+
+    def _on_message_ack_decorator(self, on_message):
+        def __on_message_ack_decorator(channel, basic_deliver, properties, body):
+            try:
+                on_message(body)
+                channel.basic_ack(basic_deliver.delivery_tag)
+            except:
+                channel.basic_nack(basic_deliver.delivery_tag)
+        return __on_message_ack_decorator
+
+
+
 
     def _start_consume(self, channel):
         self._channel.add_on_cancel_callback(self.on_consumer_cancelled)
