@@ -38,8 +38,6 @@ class _AsyncConnector(threading.Thread):
         self.__on_setup_complete(self._channel)
 
     def run(self):
-
-
         self._connection = pika.SelectConnection(
             pika.ConnectionParameters(**self._connection_parameters),
             self._on_connection_open,
@@ -115,6 +113,9 @@ class AsyncMemQueuePublisher(_AsyncConnector):
         self._acked = 0
         self._nacked = 0
         self._message_number = 0
+        self._delayed_stop = False
+        self._flush_stop = False
+        self._flush_lock = threading.Lock()
 
     def send(self, message, exchange=None, routing_key=None):
         if exchange is None:
@@ -150,6 +151,8 @@ class AsyncMemQueuePublisher(_AsyncConnector):
         self._schedule_next_message()
 
     def _schedule_next_message(self, is_empty=False):
+        if self._delayed_stop and is_empty:
+            self.stop(delayed=False)
         self._connection.add_timeout(
             (self._delay_ms if not is_empty else self._empty_delay_ms) / 1000.0,
             self._on_publish_scheduled)
@@ -157,10 +160,26 @@ class AsyncMemQueuePublisher(_AsyncConnector):
     def _on_publish_scheduled(self):
         if self._stopping:
             return
-
         try:
             m, exc, rk = self._mem_q.get(block=False)
             self._publish(m, exc, rk)
             self._schedule_next_message()
         except queue.Empty:
             self._schedule_next_message(is_empty=True)
+
+    def stop(self, delayed=False):
+        if delayed:
+            self._delayed_stop = True
+        else:
+            super(AsyncMemQueuePublisher, self).stop()
+            if self._flush_stop:
+                self._flush_lock.release()
+
+    def flush(self):
+        self._flush_stop = True
+        self._flush_lock.acquire()
+        self.stop(delayed=True)
+        self._flush_lock.acquire()
+
+
+
