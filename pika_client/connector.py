@@ -55,6 +55,8 @@ class _AsyncConnector(threading.Thread):
             self._connection.close()
 
     def stop(self):
+        if self._stopping:
+            return
         self._stopping = True
         self._close_connection()
 
@@ -87,6 +89,8 @@ class AsyncConsumer(_AsyncConnector):
             self._channel.close()
 
     def stop(self):
+        if self._stopping:
+            return
         self._stopping = True
         self._stop_consuming()
         self._connection.ioloop.start()
@@ -114,7 +118,7 @@ class AsyncMemQueuePublisher(_AsyncConnector):
         self._nacked = 0
         self._message_number = 0
         self._delayed_stop = False
-        self._flush_stop = False
+        self._flush = False
         self._flush_lock = threading.Lock()
 
     def send(self, message, exchange=None, routing_key=None):
@@ -151,8 +155,8 @@ class AsyncMemQueuePublisher(_AsyncConnector):
         self._schedule_next_message()
 
     def _schedule_next_message(self, is_empty=False):
-        if self._delayed_stop and is_empty:
-            self.stop(delayed=False)
+        if self._flush and is_empty:
+            self._flush_lock.release()
         self._connection.add_timeout(
             (self._delay_ms if not is_empty else self._empty_delay_ms) / 1000.0,
             self._on_publish_scheduled)
@@ -167,19 +171,20 @@ class AsyncMemQueuePublisher(_AsyncConnector):
         except queue.Empty:
             self._schedule_next_message(is_empty=True)
 
-    def stop(self, delayed=False):
-        if delayed:
-            self._delayed_stop = True
+    def stop(self):
+        if self._stopping:
+            return
         else:
             super(AsyncMemQueuePublisher, self).stop()
-            if self._flush_stop:
+            if self._flush:
                 self._flush_lock.release()
 
-    def flush(self):
-        self._flush_stop = True
+    def flush(self, timeout=-1):
+        self._flush = True
         self._flush_lock.acquire()
-        self.stop(delayed=True)
-        self._flush_lock.acquire()
+        all_flushed = self._flush_lock.acquire(timeout)
+        self._flush = False
+        return all_flushed
 
 
 

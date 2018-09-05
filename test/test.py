@@ -14,8 +14,13 @@ publisher_route_setup_conf = config["publishers"]["default"]["route"]
 class TestWorkQueue(unittest.TestCase):
     def setUp(self):
         self._publisher = create_persistent_async_publisher(connection_parameters, publisher_route_setup_conf)
-        self._consumer = create_persistent_async_consumer(connection_parameters, consumer_route_setup_conf, self.on_message)
-        self._consumer._channel.queue_purge(self._consumer.queue)
+        self._publisher.start()
+        time.sleep(5)
+        self._publisher._channel.queue_purge(callback=None, queue=config["publishers"]["default"]["route"]["routing_key"])
+        time.sleep(5)
+
+    def tearDown(self):
+        self._publisher.stop()
 
     def on_message(self, body):
         print(body)
@@ -27,12 +32,12 @@ class TestWorkQueue(unittest.TestCase):
     # def test_stop_consumer(self):
     #     self._stop_connector(self._consumer)
     #
-    @staticmethod
-    def _stop_connector(connector):
-        connector.start()
-        time.sleep(5)
-        connector.stop()
-        time.sleep(10)
+    # @staticmethod
+    # def _stop_connector(connector):
+    #     connector.start()
+    #     time.sleep(5)
+    #     connector.stop()
+    #     time.sleep(10)
 
 
 
@@ -40,7 +45,6 @@ class TestWorkQueue(unittest.TestCase):
 
     def test_message(self):
         # self._consumer.start()
-        self._publisher.start()
         for x in range(1000):
             self._publisher.send(
                 {"product_name": "",
