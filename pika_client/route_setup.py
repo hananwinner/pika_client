@@ -20,6 +20,12 @@ class RouteSetup(object):
         queue = _setup_config.get("queue")
         if queue is not None:
             task_list.append(("queue", queue))
+
+        rk = _setup_config.get("routing_key")
+        if rk is not None:
+            if exc is None or exc == "":
+                if queue is None:
+                    task_list.append(("queue", rk))
         return task_list
 
     def _next_task(self, method_frame):

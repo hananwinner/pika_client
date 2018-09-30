@@ -17,7 +17,7 @@ class TestWorkQueue(unittest.TestCase):
         self._publisher.start()
         time.sleep(5)
         self._publisher._channel.queue_purge(callback=None, queue=config["publishers"]["default"]["route"]["routing_key"])
-        time.sleep(5)
+        # time.sleep(5)
 
     def tearDown(self):
         self._publisher.stop()
