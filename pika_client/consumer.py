@@ -5,7 +5,7 @@ class AsyncConsumer(_AsyncConnector):
     def __init__(self, connection_parameters, on_message, **kwargs):
         self._queue = kwargs.get("queue")
         self._on_message = self._on_message_ack_decorator(on_message)
-        super(AsyncConsumer, self).__init__(connection_parameters, self._start_consume, **kwargs)
+        super(AsyncConsumer, self).__init__(connection_parameters, **kwargs)
         self._consumer_tag = None
 
     def start_operation(self):

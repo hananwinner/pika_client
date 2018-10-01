@@ -6,7 +6,7 @@ import time
 with open("test/config/connectors.yaml", "r") as fdr:
     config = yaml.load(fdr)
 
-connection_parameters = config["consumers"]["default"]["connection"]
+connection_parameters = config["publishers"]["default"]["connection"]
 consumer_route_setup_conf = config["consumers"]["default"]["route"]
 publisher_route_setup_conf = config["publishers"]["default"]["route"]
 
