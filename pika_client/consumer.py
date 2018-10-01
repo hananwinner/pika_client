@@ -9,6 +9,7 @@ class AsyncConsumer(_AsyncConnector):
         self._consumer_tag = None
 
     def start_operation(self):
+        self._log.debug('start_operation')
         self._start_consume(self._channel)
 
     def _on_message_ack_decorator(self, on_message):
@@ -21,6 +22,7 @@ class AsyncConsumer(_AsyncConnector):
         return __on_message_ack_decorator
 
     def _start_consume(self, channel):
+        self._log.debug('_start_consume')
         self._channel.add_on_cancel_callback(self.on_consumer_cancelled)
         self._consumer_tag = self._channel.basic_consume(self._on_message, self._queue)
 
