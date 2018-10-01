@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(name='pika_client',
-      version='0.7',
+      version='0.8',
       description='Pika Client',
       url='https://github.com/BenjiBackslash/pika_client',
       author='Hanan Wiener',
