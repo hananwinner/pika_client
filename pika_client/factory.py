@@ -9,8 +9,7 @@ def _make_launcher_proxy(connector, setup_config):
 
 
 def create_persistent_async_consumer(connection_parameters, setup_config, on_message_callback, **kwargs):
-    queue = setup_config.get("queue")
-    connector = AsyncConsumer(connection_parameters, on_message_callback, queue=queue, **kwargs)
+    connector = AsyncConsumer(connection_parameters, on_message_callback, **kwargs)
     return _make_launcher_proxy(connector, setup_config)
 
 
