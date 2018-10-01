@@ -2,7 +2,7 @@ from pika_client.connector import _AsyncConnector
 
 
 class AsyncConsumer(_AsyncConnector):
-    def __init__(self, connection_parameters, **kwargs):
+    def __init__(self, connection_parameters, on_message, **kwargs):
         self._queue = kwargs.get("queue")
         self._on_message = self._on_message_ack_decorator(on_message)
         super(AsyncConsumer, self).__init__(connection_parameters, self._start_consume, **kwargs)
